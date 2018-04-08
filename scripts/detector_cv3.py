@@ -3,16 +3,17 @@ import rospy
 import cv2
 import sys
 
-from std_msgs.msg import String, Int16, Int16MultiArray
+from std_msgs.msg import String, Int16
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from rospy.numpy_msg import numpy_msg
+from rospy_tutorials.msg import Floats
 
 
 import logging as log
 import datetime as dt
-
+import numpy
 from time import sleep
-
 
 class image_converter:
 
@@ -54,7 +55,7 @@ class image_converter:
     
 
     def callback(self,data):
-        publ = rospy.Publisher('coordinates', Int16MultiArray)
+        publ = rospy.Publisher('coordinates', numpy_msg(Floats))
         # rospy.init_node('coo', anonymous=True)
             
         try:
@@ -80,9 +81,12 @@ class image_converter:
             
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
-                var = [x,y,w,h]
-                rospy.loginfo("here are the coordinates of bounding box: %s", var)
-            	publ.publish(var)
+                # rospy.loginfo("here are the coordinates of bounding box: %s", var)
+            	var = numpy.array([x, y, w, h], dtype=numpy.float32)
+                publ.publish(var)
+                # publ.publish(y)
+                # publ.publish(w)
+                # publ.publish(h)
 
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
@@ -104,3 +108,4 @@ if __name__ == '__main__':
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down")
+
