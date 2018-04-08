@@ -4,6 +4,7 @@ import cv2
 import sys
 
 from std_msgs.msg import String
+from std_msgs.msg import Int8
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -75,11 +76,19 @@ class image_converter:
             rospy.loginfo("I see a face %d",len(faces))
             rospy.logdebug("Partial: %s" + str(faces))
 
+
+			publ = rospy.Publisher('coordinates', Int8, queue_size=10)
+			rospy.init_node('coo', anonymous=True)
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
             cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
-        
+			
+			var = [x,y,w,h]
+			rospy.loginfo(var)
+			pub.publish(var)
+
+
             cv2.imshow("Image window", frame)
             cv2.waitKey(3)
 
