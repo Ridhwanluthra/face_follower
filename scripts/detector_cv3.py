@@ -3,8 +3,7 @@ import rospy
 import cv2
 import sys
 
-from std_msgs.msg import String
-from std_msgs.msg import Int8
+from std_msgs.msg import String, Int16, Int16MultiArray
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -55,6 +54,9 @@ class image_converter:
     
 
     def callback(self,data):
+        publ = rospy.Publisher('coordinates', Int16MultiArray)
+        # rospy.init_node('coo', anonymous=True)
+            
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -71,24 +73,20 @@ class image_converter:
             minNeighbors=5,
             minSize=(30, 30)
         )
-
+        
         if len(faces):
             rospy.loginfo("I see a face %d",len(faces))
             rospy.logdebug("Partial: %s" + str(faces))
-
-
-			publ = rospy.Publisher('coordinates', Int8, queue_size=10)
-			rospy.init_node('coo', anonymous=True)
+            
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
-			
-			var = [x,y,w,h]
-			rospy.loginfo(var)
-			pub.publish(var)
+                var = [x,y,w,h]
+                rospy.loginfo("here are the coordinates of bounding box: %s", var)
+            	publ.publish(var)
 
-
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
+            
             cv2.imshow("Image window", frame)
             cv2.waitKey(3)
 
@@ -106,4 +104,3 @@ if __name__ == '__main__':
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down")
-    cv2.destroyAllWindows()
