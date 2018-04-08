@@ -31,7 +31,8 @@ class image_converter:
             rospy.logwarn("parameters need to be set to start recognizer.")
             return
         
-        
+        self.publ = rospy.Publisher('coordinates', numpy_msg(Floats))
+
         self.bridge = CvBridge()
         self.faceCascade = cv2.CascadeClassifier(cascPath)
         
@@ -55,9 +56,6 @@ class image_converter:
     
 
     def callback(self,data):
-        publ = rospy.Publisher('coordinates', numpy_msg(Floats))
-        # rospy.init_node('coo', anonymous=True)
-            
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -81,13 +79,8 @@ class image_converter:
             
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
-                # rospy.loginfo("here are the coordinates of bounding box: %s", var)
-            	var = numpy.array([x, y, w, h], dtype=numpy.float32)
-                publ.publish(var)
-                # publ.publish(y)
-                # publ.publish(w)
-                # publ.publish(h)
-
+                var = numpy.array([x, y, w, h], dtype=numpy.float32)
+                self.publ.publish(var)
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
             
