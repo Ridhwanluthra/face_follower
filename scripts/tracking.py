@@ -4,6 +4,7 @@ import cv2
 import sys
 import logging as log
 import numpy
+import message_filters
 
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError   
@@ -14,16 +15,10 @@ from rospy.numpy_msg import numpy_msg
 class image_tracker:
 
     def __init__(self):
-        self.ok = none
-        self.bbox = none
-        # initialize all varialbles like this
         rospy.init_node('image_tracker', anonymous=True)
         rospy.loginfo("Tracker Started")
         
         self.bridge = CvBridge()
-
-        self.bbox = rospy.Subscriber("coordinates", numpy_msg(Floats), self.subr)
-
 
         #Where to publish
         self._output_image_topic = "~image_topic_output"
@@ -38,11 +33,18 @@ class image_tracker:
         # print rospy.has_param(self_input_image_topic)
         if rospy.has_param(self._input_image_topic):
             input_image_topic = rospy.get_param(self._input_image_topic)
-            self.image_sub = rospy.Subscriber(input_image_topic, Image, self.callback)
 
         
 
     def callback(self, data):
+
+        self.image_sub = message_filters.Subscriber(input_image_topic, Image)
+        self.bbox = message_filters.Subscriber("coordinates", numpy_msg(Floats))
+        bbox.registerCallback(callback)
+
+        ts = message_filters.ApproximateTimeSynchronizer([image_sub, bbox], 10, 0.1, allow_headerless=True)
+        ts.registerCallback(callback)
+
         tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
         tracker_type = tracker_types[2]
 
@@ -64,20 +66,21 @@ class image_tracker:
             ok = frame
         except CvBridgeError as e:
             print(e)
+        
 
         # if not ok:
         #     print "Cannot read video file"
         #     sys.exit()
-        # ok = tracker.init(frame, bbox)
+        ok = tracker.init(frame, bbox)
 
-        if not self.ok:
+        if not ok:
             sys.exit()
         # Start timer
         timer = cv2.getTickCount()
         # Update tracker
-        self.ok, self.bbox = tracker.update(frame)
+        ok, bbox = tracker.update(frame)
 
-        if self.ok:
+        if ok:
             # Tracking success
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
@@ -90,13 +93,6 @@ class image_tracker:
             self.tracker_pub.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
         except CvBridgeError as e:
             print(e)
-
-
-        def subr(self, data):
-            print rospy.get_name(), "I heard %s"%str(data.data)\
-            self.ok = tracker.init(frame, bbox)
-
-
 
 
 if __name__ == '__main__' :
