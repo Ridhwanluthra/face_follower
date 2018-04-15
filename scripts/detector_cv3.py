@@ -2,12 +2,11 @@
 import rospy
 import cv2
 import sys
-import numpy
 import logging as log
 import datetime as dt
+import numpy
 
-
-from std_msgs.msg import String, Int16
+from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from rospy_tutorials.msg import Floats
@@ -17,7 +16,6 @@ class image_converter:
 
     def __init__(self):
         rospy.init_node('image_converter', anonymous=True)
-        
         rospy.loginfo("recognizer started")
         print "1................................................"
 
@@ -28,8 +26,12 @@ class image_converter:
         else:
             rospy.logwarn("parameters need to be set to start recognizer.")
             return
-        
-        self.publ = rospy.Publisher('coordinates', numpy_msg(Floats))
+        self._coordinates = "~coordinates"
+        print rospy.has_param(self._coordinates)
+        if rospy.has_param(self._coordinates):
+            coordinates = rospy.get_param(self._coordinates)
+            self.publ = rospy.Publisher(coordinates, Floats, queue_size=10)
+        # self.publ = rospy.Publisher('coordinates', Floats, queue_size = 10)
 
         self.bridge = CvBridge()
         self.faceCascade = cv2.CascadeClassifier(cascPath)
@@ -41,7 +43,6 @@ class image_converter:
             output_image_topic = rospy.get_param(self._output_image_topic)
             self.image_pub = rospy.Publisher(output_image_topic,Image, queue_size=10)
       
-          
         #Where to subscribe
         self._input_image_topic = "~image_topic_input"
         print rospy.has_param(self._input_image_topic)
@@ -56,9 +57,6 @@ class image_converter:
         except CvBridgeError as e:
             print(e)
 
-        #(rows,cols,channels) = cv_image.shape
-        #if cols > 60 and rows > 60 :
-          #cv2.circle(cv_image, (50,50), 10, 255)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = self.faceCascade.detectMultiScale(
@@ -78,9 +76,6 @@ class image_converter:
                 self.publ.publish(var)
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
-            
-            cv2.imshow("Image window", frame)
-            cv2.waitKey(3)
 
         try:
           self.image_pub.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
@@ -92,7 +87,6 @@ if __name__ == '__main__':
     rospy.loginfo("simple_face_detection ...........")
     print "................................................"
     ic = image_converter()
-    
     try:
         rospy.spin()
     except KeyboardInterrupt:
