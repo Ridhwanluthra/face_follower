@@ -12,11 +12,13 @@
     <param name="cascade_classifier" value="$(find face_follower)/config/haarcascade_frontalface_default.xml"/>
     <param name="image_topic_input" value="/usb_cam/image_raw" />
     <param name="image_topic_output" value="/face_detection/image_raw" />
+    <param name="coordinates" value="/face_detection/coordinates" />
+    
   </node>
 
   <node name="face_tracker" pkg="face_follower" type="tracking.py" output="screen">
     <param name="image_topic_input" value="/usb_cam/image_raw" />
-    <param name="image_topic_output" value="/face_tracker/image_raw" />
+    <param name="image_topic_output" value="/face_trackor/image_raw" />
     <param name="coordinates" value="/face_detection/coordinates" />
   </node>
   
@@ -24,8 +26,9 @@
     <remap from="image" to="/face_detection/image_raw"/>
     <param name="autosize" value="true" />
   </node>
+
   <node name="image_view_tracker" pkg="image_view" type="image_view" respawn="false" output="screen">
-    <remap from="image" to="/face_tracker/image_raw"/>
+    <remap from="image" to="/face_trackor/image_raw"/>
     <param name="autosize" value="true" />
   </node>
 </launch>
