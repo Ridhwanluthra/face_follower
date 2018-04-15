@@ -41,12 +41,8 @@ class image_tracker:
         
         ts = message_filters.ApproximateTimeSynchronizer([self.image_sub, self.bbox], 10, 10, allow_headerless=True)
         ts.registerCallback(self.mycallback)
-        rospy.loginfo("created p and s")
-
 
     def mycallback(self, input_image_topic, coordinates):
-        
-        rospy.loginfo("went to callback")
         tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
         tracker_type = tracker_types[2]
         # if tracker_type == 'BOOSTING':
@@ -62,25 +58,23 @@ class image_tracker:
         # if tracker_type == 'GOTURN':
         #     tracker = cv2.TrackerGOTURN_create()
         data = input_image_topic
-        bbox = coordinates
+        bbox = coordinates.data
+        # rospy.loginfo(bbox)
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
             ok = frame
         except CvBridgeError as e:
             print(e)
 
-        rospy.loginfo("converted from ros to cv")
-        rospy.loginfo(bbox[0])
-        a = (bbox[0], bbox[1], bbox[2], bbox[3])
-        ok = tracker.init(frame, a)
+        ok = tracker.init(frame, bbox)
 
         timer = cv2.getTickCount()
         ok, a = tracker.update(frame)
 
         if ok:
             # Tracking success
-            p1 = (int(a[0]), int(a[1]))
-            p2 = (int(a[0] + a[2]), int(a[1] + a[3]))
+            p1 = (int(bbox[0]), int(bbox[1]))
+            p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             cv2.rectangle(frame, p1, p2, (255,0,0), 2, 1)
         else :
             pass
@@ -90,10 +84,7 @@ class image_tracker:
         except CvBridgeError as e:
             print(e)
 
-        rospy.loginfo("converted from cv to ros")
-
 if __name__ == '__main__' :
-
     rospy.loginfo("simple face tracker...")
     it = image_tracker()
 
