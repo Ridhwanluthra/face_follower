@@ -15,6 +15,7 @@ from time import sleep
 class image_converter:
 
     def __init__(self):
+
         rospy.init_node('image_converter', anonymous=True)
         rospy.loginfo("recognizer started")
         print "1................................................"
@@ -26,6 +27,7 @@ class image_converter:
         else:
             rospy.logwarn("parameters need to be set to start recognizer.")
             return
+
         self._coordinates = "~coordinates"
         print rospy.has_param(self._coordinates)
         if rospy.has_param(self._coordinates):
@@ -52,6 +54,7 @@ class image_converter:
 
 
     def callback(self,data):
+
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -69,11 +72,12 @@ class image_converter:
         if len(faces):
             rospy.loginfo("I see a face %d",len(faces))
             rospy.logdebug("Partial: %s" + str(faces))
-            
+
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
                 var = numpy.array([x, y, w, h], dtype=numpy.float32)
                 self.publ.publish(var)
+                
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
 
@@ -86,7 +90,9 @@ class image_converter:
 if __name__ == '__main__':
     rospy.loginfo("simple_face_detection ...........")
     print "................................................"
+
     ic = image_converter()
+
     try:
         rospy.spin()
     except KeyboardInterrupt:
