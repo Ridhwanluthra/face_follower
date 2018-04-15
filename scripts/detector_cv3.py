@@ -2,17 +2,15 @@
 import rospy
 import cv2
 import sys
+import numpy
+import logging as log
+import datetime as dt
+
 
 from std_msgs.msg import String, Int16
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
-
-
-import logging as log
-import datetime as dt
-import numpy
 from time import sleep
 
 class image_converter:
@@ -51,9 +49,6 @@ class image_converter:
             input_image_topic = rospy.get_param(self._input_image_topic)
             self.image_sub = rospy.Subscriber(input_image_topic, Image, self.callback)
 
-    
-    
-    
 
     def callback(self,data):
         try:
@@ -97,9 +92,9 @@ if __name__ == '__main__':
     rospy.loginfo("simple_face_detection ...........")
     print "................................................"
     ic = image_converter()
+    
     try:
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down")
     cv2.destroyAllWindows()
-

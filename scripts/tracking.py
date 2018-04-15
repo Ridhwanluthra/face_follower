@@ -43,10 +43,10 @@ class image_tracker:
         
 
     def callback(self, data, bbox):
+        
         rospy.loginfo("went to callback")
         tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
         tracker_type = tracker_types[2]
-
         # if tracker_type == 'BOOSTING':
         #     tracker = cv2.TrackerBoosting_create()
         # if tracker_type == 'MIL':
@@ -59,7 +59,6 @@ class image_tracker:
         #     tracker = cv2.TrackerMedianFlow_create()
         # if tracker_type == 'GOTURN':
         #     tracker = cv2.TrackerGOTURN_create()
-
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
             ok = frame
@@ -92,8 +91,6 @@ class image_tracker:
         rospy.loginfo("converted from cv to ros")
 
 if __name__ == '__main__' :
-    # Set up tracker.
-    # Instead of MIL, you can also use+
     rospy.loginfo("simple face tracker...")
     it = image_tracker()
     try:
