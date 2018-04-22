@@ -6,7 +6,7 @@ import logging as log
 import numpy
 import message_filters
 
-from rospy_tutorials.msg import Floats
+from face_follower.msg import rlist
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError   
 from message_filters import TimeSynchronizer, Subscriber
@@ -37,7 +37,7 @@ class image_tracker:
         print rospy.has_param(self._coordinates)
         if rospy.has_param(self._coordinates):
             coordinates = rospy.get_param(self._coordinates)
-            self.bbox = message_filters.Subscriber(coordinates, Floats)
+            self.bbox = message_filters.Subscriber(coordinates, rlist)
         
         ts = message_filters.ApproximateTimeSynchronizer([self.image_sub, self.bbox], 10, 10, allow_headerless=True)
         ts.registerCallback(self.mycallback)
@@ -58,7 +58,7 @@ class image_tracker:
         # if tracker_type == 'GOTURN':
         #     tracker = cv2.TrackerGOTURN_create()
         data = input_image_topic
-        bbox = coordinates.data
+        bbox = tuple(coordinates.data)
         # rospy.loginfo(bbox)
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")

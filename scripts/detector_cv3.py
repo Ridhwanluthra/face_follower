@@ -9,7 +9,7 @@ import numpy
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-from rospy_tutorials.msg import Floats
+from face_follower.msg import rlist
 from time import sleep
 
 class image_converter:
@@ -32,8 +32,7 @@ class image_converter:
         print rospy.has_param(self._coordinates)
         if rospy.has_param(self._coordinates):
             coordinates = rospy.get_param(self._coordinates)
-            self.publ = rospy.Publisher(coordinates, Floats, queue_size=10)
-        # self.publ = rospy.Publisher('coordinates', Floats, queue_size = 10)
+            self.publ = rospy.Publisher(coordinates, rlist, queue_size=10)
 
         self.bridge = CvBridge()
         self.faceCascade = cv2.CascadeClassifier(cascPath)
@@ -54,9 +53,10 @@ class image_converter:
 
 
     def callback(self,data):
-
         try:
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            var = rlist()
+            var.header.stamp = rospy.Time.now()
         except CvBridgeError as e:
             print(e)
 
@@ -75,7 +75,8 @@ class image_converter:
 
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
-                var = numpy.array([x, y, w, h], dtype=numpy.float32)
+                # var = rlist([head, "{}, {}, {}, {}".format(x, y, w, h)])
+                var.data = [x, y, w, h]
                 self.publ.publish(var)
                 
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
