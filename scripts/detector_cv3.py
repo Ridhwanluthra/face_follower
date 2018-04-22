@@ -75,12 +75,13 @@ class image_converter:
 
             # Draw a rectangle around the faces
             for (x, y, w, h) in faces:
-                # var = rlist([head, "{}, {}, {}, {}".format(x, y, w, h)])
                 var.data = [x, y, w, h]
                 self.publ.publish(var)
                 
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
                 cv2.circle(frame, (x+(w/2), y+(h/2)), 5, 255,-1)
+        else:
+        	self.publ.publish(var)
 
         try:
           self.image_pub.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))

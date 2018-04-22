@@ -18,6 +18,23 @@ class image_tracker:
         rospy.loginfo("Tracker Started")
         
         self.bridge = CvBridge()
+        self.last_bbox = []
+        self.last_frame = []
+        self.tracking = False
+        tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
+        tracker_type = tracker_types[2]
+        # if tracker_type == 'BOOSTING':
+        #     tracker = cv2.TrackerBoosting_create()
+        # if tracker_type == 'MIL':
+        #     tracker = cv2.TrackerMIL_create()
+        if tracker_type == 'KCF':
+            self.tracker = cv2.TrackerKCF_create()
+        # if tracker_type == 'TLD':
+        #     tracker = cv2.TrackerTLD_create()
+        # if tracker_type == 'MEDIANFLOW':
+        #     tracker = cv2.TrackerMedianFlow_create()
+        # if tracker_type == 'GOTURN':
+        #     tracker = cv2.TrackerGOTURN_create()
  
         #Where to publish
         self._output_image_topic = "~image_topic_output"
@@ -42,49 +59,52 @@ class image_tracker:
         ts = message_filters.ApproximateTimeSynchronizer([self.image_sub, self.bbox], 10, 10, allow_headerless=True)
         ts.registerCallback(self.mycallback)
 
+
     def mycallback(self, input_image_topic, coordinates):
-        tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'GOTURN']
-        tracker_type = tracker_types[2]
-        # if tracker_type == 'BOOSTING':
-        #     tracker = cv2.TrackerBoosting_create()
-        # if tracker_type == 'MIL':
-        #     tracker = cv2.TrackerMIL_create()
-        if tracker_type == 'KCF':
-            tracker = cv2.TrackerKCF_create()
-        # if tracker_type == 'TLD':
-        #     tracker = cv2.TrackerTLD_create()
-        # if tracker_type == 'MEDIANFLOW':
-        #     tracker = cv2.TrackerMedianFlow_create()
-        # if tracker_type == 'GOTURN':
-        #     tracker = cv2.TrackerGOTURN_create()
-        data = input_image_topic
-        bbox = tuple(coordinates.data)
-        # rospy.loginfo(bbox)
         try:
-            frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            ok = frame
+            frame = self.bridge.imgmsg_to_cv2(input_image_topic, "bgr8")
         except CvBridgeError as e:
             print(e)
 
-        ok = tracker.init(frame, bbox)
+        bbox = coordinates.data
+        if bbox:
+            self.last_bbox = bbox
+            self.last_frame = frame
 
-        timer = cv2.getTickCount()
-        ok, a = tracker.update(frame)
+        if not self.last_bbox:
+            rospy.loginfo('had not recieved any face data yet')
+            return
+
+        # rospy.loginfo(bbox)
+        if self.tracking:
+            ok, bbox = self.tracker.update(frame)
+            if not ok:
+                self.tracking = False
+                bbox = self.last_bbox
+        else:
+            # self.tracker.clear()
+            # self.tracker = cv2.TrackerKCF_create()
+            ok = self.tracker.init(frame, tuple(self.last_bbox))
+            self.tracking = True
+            bbox = self.last_bbox
+            frame = self.last_frame
 
         if ok:
-            # Tracking success
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             cv2.rectangle(frame, p1, p2, (255,0,0), 2, 1)
-        else :
-            pass
+        else:
+            rospy.loginfo("not ok")
+            rospy.loginfo(self.tracking)
 
         try:
             self.tracker_pub.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
         except CvBridgeError as e:
             print(e)
 
+
 if __name__ == '__main__' :
+
     rospy.loginfo("simple face tracker...")
     it = image_tracker()
 
