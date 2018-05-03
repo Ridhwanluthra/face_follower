@@ -23,14 +23,18 @@ class image_tracker:
         self.tracking = False
         self.tracker = cv2.TrackerKCF_create()
  
-        #Where to publish
+        # Where to publish
         self._output_image_topic = "~image_topic_output"
         print rospy.has_param(self._output_image_topic)
         if rospy.has_param(self._output_image_topic):
             output_image_topic = rospy.get_param(self._output_image_topic)
             self.tracker_pub = rospy.Publisher(output_image_topic,Image, queue_size=10)
+
+        # publishing tracker coords
+        if rospy.has_param("~tracker_coords"):
+            self.bbox_pub = rospy.Publisher(rospy.get_param("~tracker_coords"), rlist, queue_size=10)
         
-        #Where to subscribe
+        # Where to subscribe
         self._input_image_topic = "~image_topic_input"
         print rospy.has_param(self._input_image_topic)
         if rospy.has_param(self._input_image_topic):
@@ -54,6 +58,7 @@ class image_tracker:
             print(e)
 
         bbox = coordinates.data
+        rospy.loginfo(bbox)
         # TODO: add functionality to take the last stored bbox and
         #       continue tracking.
         if bbox:
@@ -67,7 +72,13 @@ class image_tracker:
         # rospy.loginfo(bbox)
         if self.tracking:
             ok, bbox = self.tracker.update(frame)
-            if not ok:
+            rospy.loginfo(bbox)
+            if ok:
+                tracker_bbox = rlist()
+                tracker_bbox.header.stamp = rospy.Time.now()
+                tracker_bbox.data = bbox
+                self.bbox_pub.publish(tracker_bbox)
+            else:
                 self.tracking = False
                 # bbox = self.last_bbox
         else:

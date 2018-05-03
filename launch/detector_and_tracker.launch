@@ -19,6 +19,7 @@
   <node name="face_tracker" pkg="face_follower" type="tracker.py" output="screen">
     <param name="image_topic_input" value="/usb_cam/image_raw" />
     <param name="image_topic_output" value="/face_tracker/image_raw" />
+    <param name="tracker_coords" value="/face_tracker/bbox" />
     <param name="coordinates" value="/face_detection/coordinates" />
   </node>
   
