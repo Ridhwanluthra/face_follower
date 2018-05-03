@@ -76,7 +76,7 @@ class image_tracker:
             if ok:
                 tracker_bbox = rlist()
                 tracker_bbox.header.stamp = rospy.Time.now()
-                tracker_bbox.data = bbox
+                tracker_bbox.data = (bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3])
                 self.bbox_pub.publish(tracker_bbox)
             else:
                 self.tracking = False
