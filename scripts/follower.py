@@ -44,6 +44,7 @@ class follower:
         print(f)
         self.down = f[0]
         self.up = f[1]
+        self.servo_pub()
         
         self.timer.shutdown()
         self.timer = rospy.Timer(rospy.Duration(2), self.timer_callback, True)
